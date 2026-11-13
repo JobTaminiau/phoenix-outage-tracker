@@ -2,7 +2,7 @@ name: poll outage maps
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # GitHub may delay or skip runs at busy times; gaps show in the log
+    - cron: "*/5 * * * *"   # GitHub may delay or skip runs at busy times; gaps show in the log; add by Job
   workflow_dispatch:
   push:                     # a change to the poller runs it once right away
     branches: [main]
