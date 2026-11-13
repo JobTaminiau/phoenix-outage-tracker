@@ -141,7 +141,7 @@ def parse_aps_layer(payload: dict[str, Any], kind: str) -> list[Observation]:
         g = f.get("geometry") or {}
         ticket = a.get("Ticket")
         local = APS_TIME_MODE == "local"
-        this_kind = "planned" if "planned" in str(a.get("outagetype") or "").lower() else kind
+        this_kind = "planned" if str(a.get("outagetype") or "").strip().lower().startswith("planned") else kind
         obs.append(Observation(
             utility="APS",
             source_id=str(ticket).strip() if ticket not in (None, "") else None,
@@ -154,7 +154,7 @@ def parse_aps_layer(payload: dict[str, Any], kind: str) -> list[Observation]:
             status=str(a.get("outagestatus")) if a.get("outagestatus") is not None else None,
             area=a.get("Boundary") or a.get("City") or a.get("APSArea"),
             kind=this_kind,
-            extra={**{k: a.get(k) for k in ("APSArea", "outagetype", "outageimpact",
+            extra={**{k: a.get(k) for k in ("City", "APSArea", "outagetype", "outageimpact",
                                             "datastatus", "Boundary", "Comments", "OBJECTID")},
                    "off_ms": a.get("off"), "etr_ms": a.get("etr"), "time_mode": APS_TIME_MODE},
         ))

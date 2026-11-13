@@ -38,5 +38,6 @@ jobs:
           bash scripts/data_repo.sh clone
           python -m outages --data data rebuild --out data/events.csv
           python scripts/status.py data/outages.sqlite > data/status.md
+          python scripts/dashboard_export.py data data/dashboard
           rm -f data/outages.sqlite
           bash scripts/data_repo.sh push "daily rebuild $(date -u +%Y-%m-%d)"

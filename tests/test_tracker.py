@@ -118,6 +118,12 @@ class TrackerTests(unittest.TestCase):
         ev = {e["utility"]: e for e in self.h.events()}
         self.assertEqual((ev["APS"]["kind"], ev["APS"]["in_metro"]), ("planned", 0))
         self.assertEqual((ev["SRP"]["kind"], ev["SRP"]["in_metro"]), ("planned", 1))
+        self.assertEqual(ev["APS"]["city"], "Show Low")
+
+    def test_unplanned_is_not_planned(self):
+        feat = dict(Ticket="U1", off=1794517200000, customers=5, outagetype="Unplanned Outage",
+                    _x=-112.0, _y=33.5)
+        self.assertEqual(parse_aps_layer(aps_payload(feat), "outage")[0].kind, "outage")
 
     def test_utilities_are_independent(self):
         self.h.poll("SRP", parse_srp([srp()]), T[0])
