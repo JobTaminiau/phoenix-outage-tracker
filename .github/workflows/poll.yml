@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "*/5 * * * *"   # GitHub may delay or skip runs at busy times; gaps show in the log
   workflow_dispatch:
+  push:                     # a change to the poller runs it once right away
+    branches: [main]
+    paths: [".github/workflows/poll.yml", "scripts/data_repo.sh", "outages/sources.py", "outages/polllog.py"]
 
 permissions:
   contents: read
