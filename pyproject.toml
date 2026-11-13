@@ -1,0 +1,9 @@
+[project]
+name = "outage-tracker"
+version = "0.1.0"
+description = "Polite tracker for the APS and SRP public outage maps (metro Phoenix)"
+requires-python = ">=3.10"
+dependencies = ["requests>=2.28"]
+
+[tool.setuptools]
+packages = ["outages"]

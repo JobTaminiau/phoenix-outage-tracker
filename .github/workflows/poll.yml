@@ -1,0 +1,45 @@
+name: poll outage maps
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # GitHub may delay or skip runs at busy times; gaps show in the log
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-repo       # one writer at a time; a late run waits instead of overlapping
+  cancel-in-progress: false
+
+env:
+  DATA_REPO: ${{ github.repository_owner }}/phoenix-outage-data
+  DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Check for data repo token
+        id: gate
+        run: |
+          if [ -z "$DATA_REPO_TOKEN" ]; then
+            echo "::warning::DATA_REPO_TOKEN secret not set yet; skipping this poll"
+            echo "skip=1" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.gate.outputs.skip != '1'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - if: steps.gate.outputs.skip != '1'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - if: steps.gate.outputs.skip != '1'
+        name: Poll APS and SRP into the private data repo
+        run: |
+          pip install --quiet requests
+          scripts/data_repo.sh clone
+          python -m outages --data data log-poll
+          scripts/data_repo.sh push "poll $(date -u +%Y-%m-%dT%H:%MZ)"

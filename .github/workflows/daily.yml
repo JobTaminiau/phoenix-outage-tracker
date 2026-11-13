@@ -1,0 +1,42 @@
+name: daily rebuild and tests
+
+on:
+  schedule:
+    - cron: "17 8 * * *"    # 01:17 Phoenix time
+  workflow_dispatch:
+  push:
+    paths: ["outages/**", "tests/**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-repo
+  cancel-in-progress: false
+
+env:
+  DATA_REPO: ${{ github.repository_owner }}/phoenix-outage-data
+  DATA_REPO_TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet requests
+      - name: Unit tests
+        run: python -m unittest discover -s tests -t .
+      - name: Rebuild events from the full log (written to the private data repo)
+        if: env.DATA_REPO_TOKEN != ''
+        run: |
+          scripts/data_repo.sh clone
+          python -m outages --data data rebuild --out data/events.csv
+          python scripts/status.py data/outages.sqlite > data/status.md
+          rm -f data/outages.sqlite
+          scripts/data_repo.sh push "daily rebuild $(date -u +%Y-%m-%d)"
