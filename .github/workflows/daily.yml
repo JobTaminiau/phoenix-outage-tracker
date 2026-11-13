@@ -35,8 +35,8 @@ jobs:
       - name: Rebuild events from the full log (written to the private data repo)
         if: env.DATA_REPO_TOKEN != ''
         run: |
-          scripts/data_repo.sh clone
+          bash scripts/data_repo.sh clone
           python -m outages --data data rebuild --out data/events.csv
           python scripts/status.py data/outages.sqlite > data/status.md
           rm -f data/outages.sqlite
-          scripts/data_repo.sh push "daily rebuild $(date -u +%Y-%m-%d)"
+          bash scripts/data_repo.sh push "daily rebuild $(date -u +%Y-%m-%d)"

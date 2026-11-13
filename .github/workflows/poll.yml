@@ -43,6 +43,6 @@ jobs:
         name: Poll APS and SRP into the private data repo
         run: |
           pip install --quiet requests
-          scripts/data_repo.sh clone
+          bash scripts/data_repo.sh clone
           python -m outages --data data log-poll
-          scripts/data_repo.sh push "poll $(date -u +%Y-%m-%dT%H:%MZ)"
+          bash scripts/data_repo.sh push "poll $(date -u +%Y-%m-%dT%H:%MZ)"
