@@ -3,7 +3,9 @@
 usage: python scripts/dashboard_export.py <data dir with outages.sqlite> <out dir>
 
 Writes {rows, meta} JSON (meta carries this script's own code so readers can check it):
-  tracker_events.json  one row per outage event, times in Arizona time (UTC-7)
+  tracker_events.json  one row per outage event, times in Arizona time (UTC-7); restore_window_min is
+                       the gap between the last poll that saw the outage and the first that did not
+                       (the precision of its end time); etr_error_min = restoration minus first ETR
   tracker_daily.json   one row per day and utility: polls, failed polls, outages started,
                        peak customers out at one time, customer-hours out
 """
@@ -44,8 +46,17 @@ def main(data_dir: Path, out_dir: Path) -> None:
         hours = None
         if end:
             hours = round((datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds() / 3600, 2)
+        precision = None
+        if e["end_lo"] and e["end_hi"]:
+            precision = round((datetime.fromisoformat(e["end_hi"]) - datetime.fromisoformat(e["end_lo"])).total_seconds() / 60, 1)
+        etr_err = None  # minutes the first restoration estimate was late (+) or early (-)
+        if end and e["etr_first"]:
+            etr_err = round((datetime.fromisoformat(end) - datetime.fromisoformat(e["etr_first"])).total_seconds() / 60, 1)
         events.append({
             "event_id": e["event_id"], "utility": e["utility"], "kind": e["kind"],
+            "start_utc": start, "first_seen_utc": e["first_seen"],
+            "restore_window_min": precision, "etr_first": az(e["etr_first"]), "etr_error_min": etr_err,
+            "n_polls": e["n_polls"], "cause_first": e["cause_first"],
             "status": "open" if e["is_open"] else "restored",
             "start": az(start), "end": az(end), "hours": hours,
             "peak_customers": e["peak_customers"], "customer_hours": round(ch.get(e["event_id"], 0), 1),
